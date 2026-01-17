@@ -58,6 +58,39 @@ def zoznam_dveri(mriezka, r, s):
     if ma_dvere(mriezka[r][s], 'Z'): dvere.append('ZAPAD')
     return dvere
 
+class myStack:
+    def __init__(self, capacity):
+        if capacity <= 0:
+            raise ValueError("Kapacita musí byť > 0")
+        self.top = 0
+        self.capacity = capacity
+        self.buffer = [None] * capacity  # myType LIFO
+
+    def push(self, data):  # void push(myType data)
+        if self.top == self.capacity:
+            raise OverflowError("Stack overflow")
+        self.buffer[self.top] = data
+        self.top += 1
+
+    def pop(self):  # myType pop()
+        if self.top == 0:
+            raise IndexError("Stack prázdny")
+        self.top -= 1
+        data = self.buffer[self.top]
+        self.buffer[self.top] = None
+        return data
+
+    def freeCap(self):  # int freeCap()
+        return self.capacity - self.top
+
+    def clear(self):  # void clear()
+        self.top = 0
+
+    def toString(self):  # String toString()
+        return str(self.buffer[:self.top])
+
+    def see(self):  # String see()
+        return str(self.buffer[:self.top])
 
 if __name__ == "__main__":
     labyrint = nacitaj_labyrint()
@@ -70,3 +103,11 @@ if __name__ == "__main__":
     dostupne = zoznam_dveri(labyrint, start_r, start_s)
     print(f"V štarte máš dvere: {', '.join(dostupne) if dostupne else 'Žiadne'}")
     print(f"Číselná hodnota štartu: {labyrint[start_r][start_s]}")
+
+    zasobnik = myStack(100)
+    zasobnik.push((start_r, start_s))
+    print(f"Stack see(): {zasobnik.see()}")
+    print(f"Voľná kapacita: {zasobnik.freeCap()}")
+    print("Test POP:")
+    print(f"Popol som: {zasobnik.pop()}")
+    print(f"toString(): {zasobnik.toString()}")
