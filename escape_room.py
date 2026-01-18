@@ -1,3 +1,39 @@
+import time
+
+class myStack:
+    def __init__(self, capacity):
+        if capacity <= 0:
+            raise ValueError("Kapacita musí byť > 0")
+        self.top = 0
+        self.capacity = capacity
+        self.buffer = [None] * capacity  # myType LIFO
+
+    def push(self, data):  # void push(myType data)
+        if self.top == self.capacity:
+            raise OverflowError("Stack overflow")
+        self.buffer[self.top] = data
+        self.top += 1
+
+    def pop(self):  # myType pop()
+        if self.top == 0:
+            raise IndexError("Stack prázdny")
+        self.top -= 1
+        data = self.buffer[self.top]
+        self.buffer[self.top] = None
+        return data
+
+    def freeCap(self):  # int freeCap()
+        return self.capacity - self.top
+
+    def clear(self):  # void clear()
+        self.top = 0
+
+    def toString(self):  # String toString()
+        return str(self.buffer[:self.top])
+
+    def see(self):  # String see()
+        return str(self.buffer[:self.top])
+
 def nacitaj_labyrint(soubor="labyrint.txt"):
     mriezka = []
     try:
@@ -43,12 +79,13 @@ def ma_dvere(bunka, smer):
     if smer == 'Z': return bunka & 8  # Zapad = 8
     return False
 
-def posun_pozicia(r, s, smer):
-    if smer == 'S': return r-1, s
-    if smer == 'V': return r, s+1
-    if smer == 'J': return r+1, s
-    if smer == 'Z': return r, s-1
-    return None
+def posun_pozicia(r, s, prikaz):
+    smer = prikaz[0].upper()  # vezme prvý písmeno
+    if smer == 'S': return (r-1, s)
+    if smer == 'V': return (r, s+1)
+    if smer == 'J': return (r+1, s)
+    if smer == 'Z': return (r, s-1)
+    return None  # Neplatný smer
 
 def zoznam_dveri(mriezka, r, s):
     dvere = []
@@ -58,56 +95,57 @@ def zoznam_dveri(mriezka, r, s):
     if ma_dvere(mriezka[r][s], 'Z'): dvere.append('ZAPAD')
     return dvere
 
-class myStack:
-    def __init__(self, capacity):
-        if capacity <= 0:
-            raise ValueError("Kapacita musí byť > 0")
-        self.top = 0
-        self.capacity = capacity
-        self.buffer = [None] * capacity  # myType LIFO
+def je_platna_pozicia(r, s, riadky, stlpce):
+    return 0 <= r < riadky and 0 <= s < stlpce
 
-    def push(self, data):  # void push(myType data)
-        if self.top == self.capacity:
-            raise OverflowError("Stack overflow")
-        self.buffer[self.top] = data
-        self.top += 1
+def zobrazi_miestnost(mriezka, r, s, stack=None, kroky=0):
+    print(f"\n🎮 MIESTNOSŤ {mriezka[r][s]} [{r},{s}] | Kroky: {kroky}")
+    dvere = zoznam_dveri(mriezka, r, s)
+    print("DVERE:", ", ".join(dvere) if dvere else "Žiadne")
+    if mriezka[r][s] & 32: print("🌟 KLÚČ NÁJDENÝ! 🌟")
+    if stack and stack.top: print(f"🗺️ Cesta späť: {stack.see()}")
 
-    def pop(self):  # myType pop()
-        if self.top == 0:
-            raise IndexError("Stack prázdny")
-        self.top -= 1
-        data = self.buffer[self.top]
-        self.buffer[self.top] = None
-        return data
+def main():
+    mriezka = nacitaj_labyrint()
+    r, s = najdi_start(mriezka)
+    stack = myStack(100)
+    kroky = 0
+    start_pos = (r, s)
+    start_time = time.time()
 
-    def freeCap(self):  # int freeCap()
-        return self.capacity - self.top
+    print("🎮 ESCAPE ROOM LIFO | SEVER/VYCHOD/JUH/ZAPAD/NAVRAT/KONIEC")
 
-    def clear(self):  # void clear()
-        self.top = 0
+    while True:
+        zobrazi_miestnost(mriezka, r, s, stack, kroky)
 
-    def toString(self):  # String toString()
-        return str(self.buffer[:self.top])
+        prikaz = input("> ").strip().upper()
+        if prikaz == "KONIEC": break
+        if prikaz == "NAVRAT":
+            if stack.top:
+                r, s = stack.pop()
+                print("↩️ Návrat")
+                kroky += 1
+            else:
+                print("❌ Žiadny návrat!")
+            continue
 
-    def see(self):  # String see()
-        return str(self.buffer[:self.top])
+        nova_pozicia = posun_pozicia(r, s, prikaz)
+        if nova_pozicia is None:
+            print("❌ Neplatný smer!")
+            continue
+
+        nova_r, nova_s = nova_pozicia
+
+        stack.push((r, s))
+        r, s = nova_r, nova_s
+        kroky += 1
+
+        # VÍŤAZSTVO
+        if (mriezka[r][s] & 32) and (r, s) == start_pos:
+            print(f"\n🏆 VÍŤAZTVO! {kroky} krokov, {time.time() - start_time:.1f}s")
+            break
+
+    print("Ďakujeme za hru! 👋")
 
 if __name__ == "__main__":
-    labyrint = nacitaj_labyrint()
-    print(f"Rozmery: {len(labyrint)}x{len(labyrint[0]) if labyrint else 0}")
-
-    start_r, start_s = najdi_start(labyrint)
-    print(f"ŠTART nájdený na pozícii: RIADOK {start_r}, STĹPEC {start_s}")
-    print(f"Hodnota štartu: {labyrint[start_r][start_s]}")
-
-    dostupne = zoznam_dveri(labyrint, start_r, start_s)
-    print(f"V štarte máš dvere: {', '.join(dostupne) if dostupne else 'Žiadne'}")
-    print(f"Číselná hodnota štartu: {labyrint[start_r][start_s]}")
-
-    zasobnik = myStack(100)
-    zasobnik.push((start_r, start_s))
-    print(f"Stack see(): {zasobnik.see()}")
-    print(f"Voľná kapacita: {zasobnik.freeCap()}")
-    print("Test POP:")
-    print(f"Popol som: {zasobnik.pop()}")
-    print(f"toString(): {zasobnik.toString()}")
+    main()
