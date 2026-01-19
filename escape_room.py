@@ -99,22 +99,22 @@ def je_platna_pozicia(r, s, riadky, stlpce):
     return 0 <= r < riadky and 0 <= s < stlpce
 
 def zobrazi_miestnost(mriezka, r, s, stack=None, kroky=0):
-    print(f"\n🎮 MIESTNOSŤ {mriezka[r][s]} [{r},{s}] | Kroky: {kroky}")
+    print(f"\nSi v miestnosti {mriezka[r][s]} [{r},{s}] | Tvoje kroky: {kroky}")
     dvere = zoznam_dveri(mriezka, r, s)
-    print("DVERE:", ", ".join(dvere) if dvere else "Žiadne")
-    if mriezka[r][s] & 32: print("🌟 KLÚČ NÁJDENÝ! 🌟")
-    if stack and stack.top: print(f"🗺️ Cesta späť: {stack.see()}")
+    print("Kam možeš ísť:", ", ".join(dvere) if dvere else "NIKDE")
+    if mriezka[r][s] & 32: print("NAšiel si kľúč!!!")
+    if stack and stack.top: print(f"Cesta späť: {stack.see()}")
 
 def main():
     mriezka = nacitaj_labyrint()
     ma_kluc = False
     r, s = najdi_start(mriezka)
-    stack = myStack(100)
+    stack = myStack(1000)
     kroky = 0
     start_pos = (r, s)
     start_time = time.time()
 
-    print("🎮 ESCAPE ROOM LIFO | SEVER/VYCHOD/JUH/ZAPAD/NAVRAT/KONIEC")
+    print("ESCAPE ROOM | Ovládanie: SEVER/VYCHOD/JUH/ZAPAD/NAVRAT/KONIEC")
 
     while True:
         zobrazi_miestnost(mriezka, r, s, stack, kroky)
@@ -128,16 +128,16 @@ def main():
                 kroky += 1
                 if ma_kluc and (r, s) == start_pos:
                     elapsed = time.time() - start_time
-                    print(f"\n🏆 VÍŤAZ! Nájdený kľúč + návrat na štart!")
-                    print(f"Kroky: {kroky} | Čas: {elapsed:.1f}s")
+                    print(f"\nVÍŤAZSTVO! Našiel si kľúč a úspešne si sa vrátil naspäť na štart!")
+                    print(f"Počet krokov: {kroky} | Tvoj čas: {elapsed:.1f}s")
                     break
             else:
-                print("❌ Žiadny návrat!")
+                print("Žiadny návrat!")
             continue
 
         nova_pozicia = posun_pozicia(r, s, prikaz)
         if nova_pozicia is None:
-            print("❌ Neplatný smer!")
+            print("POZOR - Neplatný smer!")
             continue
 
         nova_r, nova_s = nova_pozicia
@@ -148,15 +148,15 @@ def main():
 
         if mriezka[r][s] & 32:
             ma_kluc = True
-            print("🔑 NAŠIEL SI KĽÚČ!")
+            print("Našiel si kľúč! Teraz sa len vrátiť na štart...")
 
         if ma_kluc and (r, s) == start_pos:
             elapsed = time.time() - start_time
-            print(f"\n🏆 VÍŤAZ! Nájdený kľúč + návrat na štart!")
+            print(f"\nVÍŤAZSTVO! Našiel si kľúč a úspešne si sa vrátil naspäť na štart!")
             print(f"Kroky: {kroky} | Čas: {elapsed:.1f}s")
             break
 
-    print("Ďakujeme za hru! 👋")
+    print("Ďakujem za hru!")
 
 if __name__ == "__main__":
     main()
