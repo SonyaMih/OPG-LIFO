@@ -107,6 +107,7 @@ def zobrazi_miestnost(mriezka, r, s, stack=None, kroky=0):
 
 def main():
     mriezka = nacitaj_labyrint()
+    ma_kluc = False
     r, s = najdi_start(mriezka)
     stack = myStack(100)
     kroky = 0
@@ -125,6 +126,11 @@ def main():
                 r, s = stack.pop()
                 print("↩️ Návrat")
                 kroky += 1
+                if ma_kluc and (r, s) == start_pos:
+                    elapsed = time.time() - start_time
+                    print(f"\n🏆 VÍŤAZ! Nájdený kľúč + návrat na štart!")
+                    print(f"Kroky: {kroky} | Čas: {elapsed:.1f}s")
+                    break
             else:
                 print("❌ Žiadny návrat!")
             continue
@@ -140,9 +146,14 @@ def main():
         r, s = nova_r, nova_s
         kroky += 1
 
-        # VÍŤAZSTVO
-        if (mriezka[r][s] & 32) and (r, s) == start_pos:
-            print(f"\n🏆 VÍŤAZTVO! {kroky} krokov, {time.time() - start_time:.1f}s")
+        if mriezka[r][s] & 32:
+            ma_kluc = True
+            print("🔑 NAŠIEL SI KĽÚČ!")
+
+        if ma_kluc and (r, s) == start_pos:
+            elapsed = time.time() - start_time
+            print(f"\n🏆 VÍŤAZ! Nájdený kľúč + návrat na štart!")
+            print(f"Kroky: {kroky} | Čas: {elapsed:.1f}s")
             break
 
     print("Ďakujeme za hru! 👋")
