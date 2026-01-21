@@ -2,37 +2,36 @@ import time
 
 class myStack:
     def __init__(self, capacity):
-        if capacity <= 0:
-            raise ValueError("Kapacita musí byť > 0")
+        if capacity <= 0: raise ValueError("Kapacita > 0")
         self.top = 0
         self.capacity = capacity
-        self.buffer = [None] * capacity  # myType LIFO
+        self.buffer = [None] * capacity
 
-    def push(self, data):  # void push(myType data)
-        if self.top == self.capacity:
-            raise OverflowError("Stack overflow")
-        self.buffer[self.top] = data
+    def push(self, smer):
+        if self.top == self.capacity: raise OverflowError("Stack overflow")
+        self.buffer[self.top] = smer
         self.top += 1
 
-    def pop(self):  # myType pop()
-        if self.top == 0:
-            raise IndexError("Stack prázdny")
+    def pop(self):
+        if self.top == 0: raise IndexError("Stack prázdny")
         self.top -= 1
-        data = self.buffer[self.top]
-        self.buffer[self.top] = None
-        return data
+        return self.buffer[self.top]
 
-    def freeCap(self):  # int freeCap()
+    def freeCap(self):
         return self.capacity - self.top
 
-    def clear(self):  # void clear()
+    def clear(self):
         self.top = 0
 
-    def toString(self):  # String toString()
+    def toString(self):
         return str(self.buffer[:self.top])
 
-    def see(self):  # String see()
-        return str(self.buffer[:self.top])
+    def see(self):
+        # Prehľadné smery pre užívateľa
+        smery = self.buffer[:self.top]
+        if smery:
+            return " -> ".join(smery)
+        return "Prázdny"
 
 def nacitaj_labyrint(soubor="labyrint.txt"):
     mriezka = []
@@ -80,12 +79,12 @@ def ma_dvere(bunka, smer):
     return False
 
 def posun_pozicia(r, s, prikaz):
-    smer = prikaz[0].upper()  # vezme prvý písmeno
+    smer = prikaz[0].upper()
     if smer == 'S': return (r-1, s)
     if smer == 'V': return (r, s+1)
     if smer == 'J': return (r+1, s)
     if smer == 'Z': return (r, s-1)
-    return None  # Neplatný smer
+    return None
 
 def zoznam_dveri(mriezka, r, s):
     dvere = []
@@ -98,65 +97,98 @@ def zoznam_dveri(mriezka, r, s):
 def je_platna_pozicia(r, s, riadky, stlpce):
     return 0 <= r < riadky and 0 <= s < stlpce
 
-def zobrazi_miestnost(mriezka, r, s, stack=None, kroky=0):
-    print(f"\nSi v miestnosti {mriezka[r][s]} [{r},{s}] | Tvoje kroky: {kroky}")
+"""def zobrazi_miestnost(mriezka, r, s, stack=None, kroky=0):
+    graficke_zobrazenie = ["|-----------|",
+                           "|           |"]
+    print(f"\nSi v miestnosti [{r},{s}] | Tvoje kroky: {kroky}")
     dvere = zoznam_dveri(mriezka, r, s)
     print("Kam možeš ísť:", ", ".join(dvere) if dvere else "NIKDE")
-    if mriezka[r][s] & 32: print("NAšiel si kľúč!!!")
-    if stack and stack.top: print(f"Cesta späť: {stack.see()}")
+    if "SEVER" in dvere:
+        print(graficke_zobrazenie[0])
+        print(graficke_zobrazenie[1])
+        
+    if mriezka[r][s] & 32: print("Našiel si kľúč!!!")
+    if stack and stack.top: print(f"Cesta späť: {stack.see()}")"""
+
+
+def zobrazi_miestnost(mriezka, r, s, stack=None, kroky=0, ma_kluc=False):
+    print(f"=== MIESTNOSŤ {mriezka[r][s]} [{r},{s}] ===")
+    print(f"Tvoje kroky: {kroky} | Klúč: {'Máš' if ma_kluc else 'Nemáš'}")
+
+    dvere = zoznam_dveri(mriezka, r, s)
+    print("Kam môžeš isť:", ", ".join(dvere) if dvere else "Žiadne")
+
+    if stack and stack.top > 0:
+        print(f"Cesta späť: {stack.see()}")
+
 
 def main():
     mriezka = nacitaj_labyrint()
     ma_kluc = False
-    r, s = najdi_start(mriezka)
+    start_r, start_s = najdi_start(mriezka)
+    r, s = start_r, start_s
     stack = myStack(1000)
     kroky = 0
-    start_pos = (r, s)
+    start_pos = (start_r, start_s)
     start_time = time.time()
 
-    print("ESCAPE ROOM | Ovládanie: SEVER/VYCHOD/JUH/ZAPAD/NAVRAT/KONIEC")
+    riadky, stlpce = len(mriezka), len(mriezka[0])
+
+    print("ESCAPE ROOM | SEVER/VYCHOD/JUH/ZAPAD/NAVRAT/KONIEC")
 
     while True:
-        zobrazi_miestnost(mriezka, r, s, stack, kroky)
+        if ma_kluc and (r, s) == start_pos:
+            elapsed = time.time() - start_time
+            print(f"VÍŤAZSTVO! Našiel si KĽÚČ a úspešne si sa vrátil na štart!")
+            print(f"Tvoje kroky: {kroky} | Čas: {elapsed:.1f}s")
+            print("GRATULUJEM!")
+            break
+
+        zobrazi_miestnost(mriezka, r, s, stack, kroky, ma_kluc)
 
         prikaz = input("> ").strip().upper()
+        print()
         if prikaz == "KONIEC": break
+
         if prikaz == "NAVRAT":
-            if stack.top:
-                r, s = stack.pop()
-                print("↩️ Návrat")
-                kroky += 1
-                if ma_kluc and (r, s) == start_pos:
-                    elapsed = time.time() - start_time
-                    print(f"\nVÍŤAZSTVO! Našiel si kľúč a úspešne si sa vrátil naspäť na štart!")
-                    print(f"Počet krokov: {kroky} | Tvoj čas: {elapsed:.1f}s")
-                    break
+            if stack.top > 0:
+                predosly_smer = stack.pop()
+                if predosly_smer == "SEVER":
+                    r += 1
+                elif predosly_smer == "VYCHOD":
+                    s -= 1
+                elif predosly_smer == "JUH":
+                    r -= 1
+                elif predosly_smer == "ZAPAD":
+                    s += 1
             else:
                 print("Žiadny návrat!")
             continue
 
         nova_pozicia = posun_pozicia(r, s, prikaz)
         if nova_pozicia is None:
-            print("POZOR - Neplatný smer!")
+            print("Neplatný smer!")
             continue
 
         nova_r, nova_s = nova_pozicia
 
-        stack.push((r, s))
+        if not ma_dvere(mriezka[r][s], prikaz[0]):
+            print("V tomto smere nie sú dvere!")
+            continue
+        if not je_platna_pozicia(nova_r, nova_s, riadky, stlpce) or mriezka[nova_r][nova_s] == 0:
+            print("Mimo labyrintu alebo stena!")
+            continue
+
+        stack.push(prikaz)
         r, s = nova_r, nova_s
         kroky += 1
 
-        if mriezka[r][s] & 32:
+        if mriezka[r][s] & 32 and not ma_kluc:
             ma_kluc = True
-            print("Našiel si kľúč! Teraz sa len vrátiť na štart...")
-
-        if ma_kluc and (r, s) == start_pos:
-            elapsed = time.time() - start_time
-            print(f"\nVÍŤAZSTVO! Našiel si kľúč a úspešne si sa vrátil naspäť na štart!")
-            print(f"Kroky: {kroky} | Čas: {elapsed:.1f}s")
-            break
+            print("Našiel si KĽÚČ! Teraz sa len vrátiť na štart...")
 
     print("Ďakujem za hru!")
+
 
 if __name__ == "__main__":
     main()
