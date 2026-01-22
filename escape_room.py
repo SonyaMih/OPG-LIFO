@@ -27,10 +27,9 @@ class myStack:
         return str(self.buffer[:self.top])
 
     def see(self):
-        # Prehľadné smery pre užívateľa
         smery = self.buffer[:self.top]
         if smery:
-            return " -> ".join(smery)
+            return " <- ".join(smery)
         return "Prázdny"
 
 def nacitaj_labyrint(soubor="labyrint.txt"):
@@ -97,20 +96,6 @@ def zoznam_dveri(mriezka, r, s):
 def je_platna_pozicia(r, s, riadky, stlpce):
     return 0 <= r < riadky and 0 <= s < stlpce
 
-"""def zobrazi_miestnost(mriezka, r, s, stack=None, kroky=0):
-    graficke_zobrazenie = ["|-----------|",
-                           "|           |"]
-    print(f"\nSi v miestnosti [{r},{s}] | Tvoje kroky: {kroky}")
-    dvere = zoznam_dveri(mriezka, r, s)
-    print("Kam možeš ísť:", ", ".join(dvere) if dvere else "NIKDE")
-    if "SEVER" in dvere:
-        print(graficke_zobrazenie[0])
-        print(graficke_zobrazenie[1])
-        
-    if mriezka[r][s] & 32: print("Našiel si kľúč!!!")
-    if stack and stack.top: print(f"Cesta späť: {stack.see()}")"""
-
-
 def zobrazi_miestnost(mriezka, r, s, stack=None, kroky=0, ma_kluc=False):
     print(f"=== MIESTNOSŤ {mriezka[r][s]} [{r},{s}] ===")
     print(f"Tvoje kroky: {kroky} | Klúč: {'Máš' if ma_kluc else 'Nemáš'}")
@@ -163,6 +148,7 @@ def main():
                     s += 1
             else:
                 print("Žiadny návrat!")
+            kroky += 1
             continue
 
         nova_pozicia = posun_pozicia(r, s, prikaz)
